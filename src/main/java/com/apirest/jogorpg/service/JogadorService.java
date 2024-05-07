@@ -6,7 +6,6 @@ import com.apirest.jogorpg.model.Jogador;
 import com.apirest.jogorpg.model.Personagem;
 import com.apirest.jogorpg.repository.JogadorRepository;
 import com.apirest.jogorpg.repository.PersonagemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,51 +15,55 @@ import java.util.Optional;
 @Service
 public class JogadorService {
 
-    public static final String MONSTRO = "Monstro";
-    @Autowired
-    private JogadorRepository repository;
-    @Autowired
-    private PersonagemService personagemService;
-    @Autowired
-    private PersonagemRepository personRepository;
+    private final JogadorRepository repository;
+    private final PersonagemService personagemService;
+    private final PersonagemRepository personagemRepository;
+    private static final String MONSTRO = "Monstro";
 
+    public JogadorService(JogadorRepository repository, PersonagemService personagemService, PersonagemRepository personagemRepository) {
+        this.repository = repository;
+        this.personagemService = personagemService;
+        this.personagemRepository = personagemRepository;
+    }
 
-    public List<Jogador> findAll(){
+    public List<Jogador> findAll() {
         return repository.findAll();
     }
 
-    public Jogador findById(Long id){
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(
-                "Jogador not found with ID: " + id
-        ));
+    public Jogador findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Jogador not found with ID: " + id));
     }
 
-    public void delete(Long id){
+    public void delete(Long id) {
         repository.deleteById(id);
     }
 
-    public Jogador update(Jogador jogador){
+    public Jogador update(Jogador jogador) {
         if (jogador.getId() == null) {
             throw new InvalidInputException("There is no ID");
         }
         return repository.save(jogador);
     }
 
-    public Jogador create(Jogador jogador){
-        Optional<Personagem> person = personRepository.findById(jogador.getPersonagem().getId());
+    public Jogador create(Jogador jogador) {
+        Optional<Personagem> personOptional = personagemRepository.findById(jogador.getPersonagem().getId());
+        personOptional.ifPresent(jogador::setPersonagem);
         jogador.setCreatedAt(LocalDateTime.now());
-            if(person != null){
-                jogador.setPersonagem(person.get());
-        }
         return repository.save(jogador);
     }
 
-    public Jogador createMonstros(Long id){
-        Jogador monster = new Jogador();
-        Personagem person = personagemService.generateRandomPersonagem();
-        monster.setPersonagem(person);
-        monster.setNome(MONSTRO);
-        monster.setCreatedAt(LocalDateTime.now());
-        return repository.save(monster);
+    public Optional<Jogador> createMonstros(Long id) {
+        Personagem personagem = personagemService.generateRandomPersonagem();
+        if (personagem != null) {
+            Jogador monster = new Jogador();
+            monster.setPersonagem(personagem);
+            monster.setNome(MONSTRO);
+            monster.setCreatedAt(LocalDateTime.now());
+            return Optional.of(repository.save(monster));
+        } else {
+            return Optional.empty();
+        }
     }
 }
+

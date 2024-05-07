@@ -17,50 +17,43 @@ import java.util.Optional;
 @Service
 public class BatalhaServise extends CalculaDanosJogada {
 
-    public static final int QUANTIDADE_DADOS = 1;
-    public static final int TOTAL_FACES = 12;
-    public static final String MONSTRO = "Monstro";
-    public static final String JOGADOR = "Jogador";
-    @Autowired
-    private BatalhaRepository repository;
+    private static final int QUANTIDADE_DADOS = 1;
+    private static final int TOTAL_FACES = 12;
+    private static final String MONSTRO = "Monstro";
+    private static final String JOGADOR = "Jogador";
+    private final BatalhaRepository repository;
+    private final JogadorRepository jogadorRepository;
+    private final JogadorService jogadorService;
 
-    @Autowired
-    private JogadorRepository jogadorRepository;
+    public BatalhaServise(BatalhaRepository repository, JogadorRepository jogadorRepository, JogadorService jogadorService) {
+        this.repository = repository;
+        this.jogadorRepository = jogadorRepository;
+        this.jogadorService = jogadorService;
+    }
 
-    @Autowired
-    private JogadorService jogadorService;
 
     public List<Batalha> findAll(){
         return repository.findAll();
     }
 
-    public Batalha getById(Long id){
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(
-                "Batalha not found with ID: " + id
-        ));
+    public Batalha getById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Batalha not found with ID: " + id));
     }
 
     public void delete(Long id){
         repository.deleteById(id);
     }
 
-    public Batalha create(Long cod_jogador){
+    public Batalha create(Long codJogador) {
         Batalha batalha = new Batalha();
-        Optional<Jogador> jogador = jogadorRepository.findById(cod_jogador);
-        Optional<Jogador> monstro = Optional.ofNullable(jogadorService.createMonstros(cod_jogador));
+        Jogador jogador = jogadorRepository.findById(codJogador)
+                .orElseThrow(() -> new ResourceNotFoundException("Jogador not found with ID: " + codJogador));
 
         batalha.setCreatedAt(LocalDateTime.now());
-        batalha.setJogador(jogador.get());
-        batalha.setMonstro(monstro.get());
-
-        batalha.setTurno(batalha.getTurno());
-        batalha.setCod_jogador(jogador.get().getId());
-        if(jogadaDado()){
-            batalha.setIniciativa(jogador.get().getNome());
-        }
-        else{
-            batalha.setIniciativa(monstro.get().getNome());
-        }
+        batalha.setJogador(jogador);
+        batalha.setMonstro(jogadorService.createMonstros(codJogador).orElseThrow());
+        batalha.setIniciativa(jogadaDado() ? JOGADOR : MONSTRO);
         return repository.save(batalha);
     }
 

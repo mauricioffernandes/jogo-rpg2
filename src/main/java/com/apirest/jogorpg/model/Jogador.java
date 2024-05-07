@@ -33,4 +33,5 @@ public class Jogador implements Serializable {
 
     @Column(name = "SALDO")
     private int saldo;
+
 }
