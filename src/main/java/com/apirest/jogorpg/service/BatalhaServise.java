@@ -1,13 +1,12 @@
 package com.apirest.jogorpg.service;
 
+import com.apirest.jogorpg.repository.BatalhaRepository;
+import com.apirest.jogorpg.repository.JogadorRepository;
 import com.apirest.jogorpg.common.CalculaDanosJogada;
 import com.apirest.jogorpg.exception.InvalidInputException;
 import com.apirest.jogorpg.exception.ResourceNotFoundException;
 import com.apirest.jogorpg.model.Batalha;
 import com.apirest.jogorpg.model.Jogador;
-import com.apirest.jogorpg.repository.BatalhaRepository;
-import com.apirest.jogorpg.repository.JogadorRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
